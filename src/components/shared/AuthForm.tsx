@@ -11,6 +11,7 @@ import {
   Checkbox,
   Button,
 } from "@material-tailwind/react";
+import { createUserAccount } from "../../lib/appwrite/api";
 
 const AuthForm = () => {
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ const AuthForm = () => {
       try {
         return isLogin
           ? await appwrite.account.createSession(data.email, data.password)
-          : await appwrite.account.create(data.email, data.password, data.name);
+          : await createUserAccount(data);
       } catch (error) {
         console.error("Error during mutation:", error);
         throw error;

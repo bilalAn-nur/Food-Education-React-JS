@@ -10,9 +10,12 @@ export async function createUserAccount(user: INewUser) {
       user.password,
       user.name
     );
-    return newAccount;
+    return { success: true, data: newAccount };
   } catch (error) {
-    console.log(error);
-    return error;
+    console.error("Error creating user account:", error);
+    return {
+      success: false,
+      error: "Failed to create user account. Please try again later.",
+    };
   }
 }

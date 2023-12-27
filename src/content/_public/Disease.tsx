@@ -15,7 +15,7 @@ const Disease = () => {
       <div className="flex flex-wrap justify-center mt-10">
         <div className="max-w-full  p-4">
           <BlogCard
-            imageSrc="assets/img/banner/food.webp"
+            imageContentSrc="assets/img/banner/food.webp"
             judul="Special Diets"
             deskripsi="Temukan resep lezat dan tips ahli untuk menjadikan diet khusus Anda perjalanan yang memuaskan."
           />

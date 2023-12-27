@@ -1,18 +1,32 @@
 import {
+  Avatar,
   Card,
   CardBody,
+  CardFooter,
   CardHeader,
+  Tooltip,
   Typography,
 } from "@material-tailwind/react";
 
 interface BlogCardProps {
-  imageSrc: string;
+  imageContentSrc: string;
   judul: string;
   deskripsi: string;
   link?: string;
+  creator: string;
+  imageProfile: string;
+  tanggalUpload: string;
 }
 
-export function BlogCard({ imageSrc, judul, deskripsi, link }: BlogCardProps) {
+export function BlogCard({
+  imageContentSrc,
+  judul,
+  deskripsi,
+  link,
+  creator,
+  imageProfile,
+  tanggalUpload,
+}: BlogCardProps) {
   const isLinkProvided = link && link.trim() !== "";
   return (
     <div>
@@ -25,7 +39,7 @@ export function BlogCard({ imageSrc, judul, deskripsi, link }: BlogCardProps) {
               color="transparent"
               className="m-0 rounded-none"
             >
-              <img src={imageSrc} alt={judul} />
+              <img src={imageContentSrc} alt={judul} />
             </CardHeader>
             <CardBody>
               <Typography variant="h4" color="blue-gray">
@@ -34,11 +48,25 @@ export function BlogCard({ imageSrc, judul, deskripsi, link }: BlogCardProps) {
               <Typography
                 variant="lead"
                 color="gray"
-                className="mt-3 min-h-48 font-normal"
+                className="mt-3 min-h-36 font-normal"
               >
                 {deskripsi}
               </Typography>
             </CardBody>
+            <CardFooter className="flex items-center justify-between">
+              <div className="flex items-center -space-x-3">
+                <Tooltip content={creator}>
+                  <Avatar
+                    size="sm"
+                    variant="circular"
+                    alt={creator}
+                    src={imageProfile}
+                    className="border-2 border-white hover:z-10"
+                  />
+                </Tooltip>
+              </div>
+              <Typography className="font-normal">{tanggalUpload}</Typography>
+            </CardFooter>
           </Card>
         </a>
       ) : (
@@ -49,7 +77,7 @@ export function BlogCard({ imageSrc, judul, deskripsi, link }: BlogCardProps) {
             color="transparent"
             className="m-0 rounded-none"
           >
-            <img src={imageSrc} alt={judul} />
+            <img src={imageContentSrc} alt={judul} />
           </CardHeader>
           <CardBody>
             <Typography variant="h4" color="blue-gray">

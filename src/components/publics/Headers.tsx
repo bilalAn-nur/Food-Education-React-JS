@@ -31,7 +31,7 @@ import {
   PowerIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/solid";
-import AuthForm from "../auth/AuthForm";
+import AuthForm from "../shared/AuthForm";
 
 const profileMenuItems = [
   {

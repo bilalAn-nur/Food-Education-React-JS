@@ -4,7 +4,8 @@ import {
   CardBody,
   Typography,
   Avatar,
-  Chip,
+  Radio,
+  Alert,
 } from "@material-tailwind/react";
 
 import { format, parseISO } from "date-fns";
@@ -13,8 +14,11 @@ import { useAuth } from "../../../Auth/appwrite/ApiAppwrite";
 import { useEffect, useState } from "react";
 
 export function UserManagement() {
-  const { allUserCollection } = useAuth();
+  const { allUserCollection, updateUserRoleId } = useAuth();
   const [users, setUsers] = useState([]);
+
+  const [alert, setAlert] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -27,6 +31,47 @@ export function UserManagement() {
 
     fetchData();
   }, [allUserCollection]);
+
+  // const handleDeleteUser = async (userId) => {
+  //   try {
+  //     const response = await deleteUserCollection(userId);
+  //     return response;
+  //   } catch (error) {
+  //     alert(error);
+  //   }
+  // };
+
+  const handleChangeRoleId = async (userId, newRoleId) => {
+    try {
+      const isConfirmed = window.confirm(
+        "Are you sure you want to change the user role?"
+      );
+      if (isConfirmed) {
+        try {
+          const response = await updateUserRoleId(userId, newRoleId);
+          return response;
+        } catch (error) {
+          alert(error);
+        }
+      }
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const handleRoleChange = (event, userId) => {
+    try {
+      const newRoleId = Number(event.target.value);
+      handleChangeRoleId(userId, newRoleId);
+      setAlert({
+        type: "success",
+        message: "Role Berhasil dirubah.",
+      });
+    } catch (error) {
+      alert(error);
+    }
+  };
+
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card>
@@ -53,62 +98,97 @@ export function UserManagement() {
               </tr>
             </thead>
             <tbody>
-              {users.map(({ imageUrl, name, email, roleId, joined }, key) => {
-                const className = `py-3 px-5 ${
-                  key === users.length - 1 ? "" : "border-b border-blue-gray-50"
-                }`;
-                const formattedJoinedDate = format(
-                  parseISO(joined),
-                  "MMM dd, yyyy, HH:mm"
-                );
-                return (
-                  <tr key={name}>
-                    <td className={className}>
-                      <div className="flex items-center gap-4">
-                        <Avatar
-                          src={imageUrl}
-                          alt={name}
-                          size="sm"
-                          variant="rounded"
-                        />
-                        <div>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-semibold">
-                            {name}
-                          </Typography>
-                          <Typography className="text-xs font-normal text-blue-gray-500">
-                            {email}
-                          </Typography>
+              {users.map(
+                ({ $id, imageUrl, name, email, roleId, joined }, key) => {
+                  const className = `py-3 px-5 ${
+                    key === users.length - 1
+                      ? ""
+                      : "border-b border-blue-gray-50"
+                  }`;
+                  const formattedJoinedDate = format(
+                    parseISO(joined),
+                    "MMM dd, yyyy, HH:mm"
+                  );
+                  return (
+                    <tr key={name}>
+                      <td className={className}>
+                        <div className="flex items-center gap-4">
+                          <Avatar
+                            src={imageUrl}
+                            alt={name}
+                            size="sm"
+                            variant="rounded"
+                          />
+                          <div>
+                            <Typography
+                              variant="small"
+                              color="blue-gray"
+                              className="font-semibold">
+                              {name}
+                            </Typography>
+                            <Typography className="text-xs font-normal text-blue-gray-500">
+                              {email}
+                            </Typography>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className={className}>
-                      <Typography className="text-xs font-semibold text-blue-gray-600">
-                        {roleId === 1 ? "Admin" : "User"}
-                      </Typography>
-                    </td>
-                    <td className={className}>
-                      <Typography className="text-xs font-semibold text-blue-gray-600">
-                        {formattedJoinedDate}
-                      </Typography>
-                    </td>
-                    <td className={className}>
-                      <Typography
-                        as="a"
-                        href="#"
-                        className="text-xs font-semibold text-blue-gray-600">
-                        Hapus
-                      </Typography>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          <div className="flex gap-10">
+                            <Radio
+                              name={$id}
+                              label="Admin"
+                              value={1}
+                              defaultChecked={roleId === 1}
+                              onChange={(event) => handleRoleChange(event, $id)}
+                            />
+                            <Radio
+                              name={$id}
+                              label="User"
+                              value={2}
+                              defaultChecked={roleId === 2}
+                              onChange={(event) => handleRoleChange(event, $id)}
+                            />
+                          </div>
+                        </Typography>
+                      </td>
+                      <td className={className}>
+                        <Typography className="text-xs font-semibold text-blue-gray-600">
+                          {formattedJoinedDate}
+                        </Typography>
+                      </td>
+                      {/* <td className={className}>
+                        <Button
+                          as="a"
+                          onClick={() => handleDeleteUser($id)}
+                          className="text-xs font-semibold text-blue-gray-600">
+                          Hapus
+                        </Button>
+                      </td> */}
+                    </tr>
+                  );
+                }
+              )}
             </tbody>
           </table>
         </CardBody>
       </Card>
+      {alert && (
+        <div className="relative w-full">
+          <div className="absolute bottom-0 right-0 bottom-0">
+            <Alert
+              open={true}
+              onClose={() => setAlert(null)}
+              animate={{
+                mount: { y: 0 },
+                unmount: { y: 100 },
+              }}
+              color={alert.type === "error" ? "red" : "green"}>
+              {alert.message}
+            </Alert>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

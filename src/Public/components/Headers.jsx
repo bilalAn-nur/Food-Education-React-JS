@@ -25,6 +25,7 @@ import { useAuth } from "../../Auth/appwrite/ApiAppwrite";
 
 function ProfileMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
   const closeMenu = () => setIsMenuOpen(false);
 
   const { user, logoutUser } = useAuth();
@@ -71,8 +72,12 @@ function ProfileMenu() {
         ];
 
   return (
-    <>
-      <Menu open={isMenuOpen} handler={setIsMenuOpen} placement="bottom-end">
+    <div className="container mx-auto flex items-center justify-between">
+      <Menu
+        open={isMenuOpen}
+        handler={setIsMenuOpen}
+        placement="bottom-end"
+        className="fixed top-0 z-50 border-0">
         {user ? (
           <>
             <MenuHandler>
@@ -141,7 +146,7 @@ function ProfileMenu() {
           </>
         )}
       </Menu>
-    </>
+    </div>
   );
 }
 
@@ -156,26 +161,69 @@ function NavList() {
         className="font-medium">
         <ListItem className="flex items-center gap-2 py-2 pr-4 ">Home</ListItem>
       </Typography>
-
-      <Typography
+      <Menu>
+        <MenuHandler>
+          <Typography
+            variant="small"
+            color="blue-gray"
+            className="font-medium"
+            as="a"
+            href="/article">
+            <ListItem className="flex items-center gap-2 py-2 pr-4 ">
+              Article
+            </ListItem>
+          </Typography>
+        </MenuHandler>
+        {/* <MenuList>
+          <Typography
+            as="a"
+            href="/diet"
+            variant="small"
+            color="blue-gray"
+            className="font-medium">
+            <ListItem className="flex items-center gap-2 py-2 pr-4 ">
+              Seputar Diet
+            </ListItem>
+          </Typography>
+          <Typography
+            as="a"
+            href="/lifestyle"
+            variant="small"
+            color="blue-gray"
+            className="font-medium">
+            <ListItem className="flex items-center gap-2 py-2 pr-4 ">
+              Gaya Hidup Sehat
+            </ListItem>
+          </Typography>
+          <Typography
+            as="a"
+            href="/diet"
+            variant="small"
+            color="blue-gray"
+            className="font-medium">
+            <ListItem className="flex items-center gap-2 py-2 pr-4 ">
+              Rekomendasi Makanan Orang Sakit
+            </ListItem>
+          </Typography>
+        </MenuList> */}
+      </Menu>
+      {/* <Typography
         as="a"
-        href="/diet"
+        href="nutricalculator"
         variant="small"
         color="blue-gray"
         className="font-medium">
         <ListItem className="flex items-center gap-2 py-2 pr-4 ">
-          Special Diets
+          Nutrikalkulator
         </ListItem>
-      </Typography>
+      </Typography> */}
       <Typography
         as="a"
-        href="lifestyle"
+        href="receplist"
         variant="small"
         color="blue-gray"
         className="font-medium">
-        <ListItem className="flex items-center gap-2 py-2 pr-4 ">
-          Healthy Lifestyle
-        </ListItem>
+        <ListItem className="flex items-center gap-2 py-2 pr-4">Resep</ListItem>
       </Typography>
       <Typography
         as="a"
@@ -184,7 +232,7 @@ function NavList() {
         color="blue-gray"
         className="font-medium">
         <ListItem className="flex items-center gap-2 py-2 pr-4">
-          Food Disease
+          Contact
         </ListItem>
       </Typography>
     </List>

@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     checkUserStatus();
   }, []);
 
-  const loginUser = async (userInfo, setAlert) => {
+  const loginUser = async (userInfo) => {
     setLoading(true);
 
     console.log("userInfo", userInfo);
@@ -130,10 +130,90 @@ export const AuthProvider = ({ children }) => {
 
   const allUserCollection = async () => {
     try {
-      const response = await databases.listDocuments(
+      let response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.userCollectionId,
         [Query.limit(25)]
+      );
+
+      return response.documents || [];
+    } catch (error) {
+      console.error("Error fetching user collection:", error);
+      throw error;
+    }
+  };
+
+  // const deleteUserCollection = async (userId) => {
+  //   try {
+  //     const response = await databases.listDocuments(
+  //       appwriteConfig.databaseId,
+  //       appwriteConfig.userCollectionId,
+  //       [Query.select(["$id", "accountId"])]
+  //     );
+
+  //     const userDocument = response.documents.find((doc) => doc.$id === userId);
+
+  //     if (!userDocument) {
+  //       throw new Error("User document not found");
+  //     }
+
+  //     const identityId = userDocument.accountId;
+
+  //     if (!identityId) {
+  //       throw new Error("Identity ID not found in user document");
+  //     }
+
+  //     const deleteAccount = await users.deleteAccount(identityId);
+
+  //     const deleteUserDB = await databases.deleteDocument(
+  //       appwriteConfig.databaseId,
+  //       appwriteConfig.userCollectionId,
+  //       userDocument.$id
+  //     );
+
+  //     return [deleteAccount, deleteUserDB];
+  //   } catch (error) {
+  //     console.error("Delete user error:", error);
+  //     throw error;
+  //   }
+  // };
+
+  const updateUserRoleId = async (userId, newRoleId) => {
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.userCollectionId
+      );
+
+      const userDocument = response.documents.find((doc) => doc.$id === userId);
+
+      if (!userDocument) {
+        throw new Error("User not found");
+      }
+
+      userDocument.roleId = newRoleId;
+
+      console.log(userDocument.roleId);
+
+      const promise = databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.userCollectionId,
+        userDocument.$id,
+        { roleId: newRoleId }
+      );
+
+      return promise;
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const allSpecialDietPostCollection = async () => {
+    try {
+      let response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId,
+        [Query.equal("category", "Special Diet").limit(10)]
       );
 
       return response.documents || [];
@@ -149,6 +229,9 @@ export const AuthProvider = ({ children }) => {
     logoutUser,
     registerUser,
     allUserCollection,
+    // deleteUserCollection,
+    updateUserRoleId,
+    allSpecialDietPostCollection,
   };
 
   return (

@@ -4,16 +4,14 @@ import Footer from "./Footer";
 
 const PublicLayout = () => {
   return (
-    <div className="flex flex-col w-full">
+    <div className="w-full min-h-screen">
       <Headers />
-      <section className="flex flex-col w-full">
-        <div className="grid flex-grow card bg-base-300 rounded-box place-items-center h-auto">
+      <section className=" w-full">
+        <div className="grid card bg-base-300 rounded-box place-items-center h-full">
           <Outlet />
         </div>
       </section>
-      <div className="mt-10">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 };

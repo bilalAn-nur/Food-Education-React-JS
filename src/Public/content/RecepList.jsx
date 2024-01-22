@@ -5,39 +5,31 @@ import { useEffect, useState } from "react";
 import SidebarRecept from "../shared/SidebarRecept.jsx";
 
 const RecipeList = () => {
-  const [recipes, setRecipes] = useState([]);
+  const [recipeList, setRecipeList] = useState([]); // Ganti nama state menjadi recipeList
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [typeParams, setTypeParams] = useState(null);
 
   const fetchRecipes = async (pageNumber) => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await axios.get(
-        `${apiConfig.urlspoonacular}recipes/random`,
+        `${apiConfig.urlspoonacular}recipes/complexSearch`,
         {
           params: {
             apiKey: apiConfig.appKeyspoonacular,
-            number: 6,
             page: pageNumber,
+            type: typeParams,
           },
         }
       );
 
-      // const textToTranslate = response.data.recipes[0].summary;
-      // const responseTranslate = await axios.post(
-      //   apiConfig.urltranslate,
-      //   null,
-      //   {
-      //     params: {
-      //       key: apiConfig.appKeytranslate,
-      //       text: textToTranslate,
-      //       lang: "en-id",
-      //     },
-      //   }
-      // );
-      // setRecipes(responseTranslate.data.text[0]);
-
-      setRecipes((prevRecipes) => [...prevRecipes, ...response.data.recipes]);
+      setRecipeList((prevRecipes) => {
+        const newRecipes = Array.isArray(response.data.results)
+          ? response.data.results
+          : [];
+        return [...prevRecipes, ...newRecipes];
+      });
       setPage(pageNumber);
     } catch (error) {
       console.error("Error fetching recipes:", error);
@@ -46,9 +38,13 @@ const RecipeList = () => {
     }
   };
 
+  const handleSelectChange = (value) => {
+    setTypeParams(value);
+  };
+
   useEffect(() => {
     fetchRecipes(page);
-  }, [page]);
+  }, [page, typeParams]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,11 +71,11 @@ const RecipeList = () => {
         <div className="flex justify-center items-center mt-auto">
           <div className="flex flex-col lg:flex-row w-full gap-8">
             <div className="lg:w-1/4">
-              <SidebarRecept />
+              <SidebarRecept onSelectChange={handleSelectChange} />
             </div>
             <div className="lg:w-3/4">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-full">
-                {recipes.map((recipe) => (
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-full">
+                {recipeList.map((recipe) => (
                   <RecipeCard key={recipe.id} recipe={recipe} />
                 ))}
               </div>

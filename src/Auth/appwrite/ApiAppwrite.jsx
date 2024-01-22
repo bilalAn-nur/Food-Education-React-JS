@@ -1,10 +1,12 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { account, appwriteConfig, avatars, databases } from "./config";
+import { account, appwriteConfig, avatars, databases, storage } from "./config";
 import { useNavigate } from "react-router-dom";
 import { ID, Query } from "appwrite";
 import { Spinner } from "@material-tailwind/react";
 
 const ApiAppwrite = createContext();
+
+// ================================ Auth Logic =======================================
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -128,6 +130,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
+  // ================================ User Management Logic =======================================
   const allUserCollection = async () => {
     try {
       let response = await databases.listDocuments(
@@ -142,41 +145,6 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
-  // const deleteUserCollection = async (userId) => {
-  //   try {
-  //     const response = await databases.listDocuments(
-  //       appwriteConfig.databaseId,
-  //       appwriteConfig.userCollectionId,
-  //       [Query.select(["$id", "accountId"])]
-  //     );
-
-  //     const userDocument = response.documents.find((doc) => doc.$id === userId);
-
-  //     if (!userDocument) {
-  //       throw new Error("User document not found");
-  //     }
-
-  //     const identityId = userDocument.accountId;
-
-  //     if (!identityId) {
-  //       throw new Error("Identity ID not found in user document");
-  //     }
-
-  //     const deleteAccount = await users.deleteAccount(identityId);
-
-  //     const deleteUserDB = await databases.deleteDocument(
-  //       appwriteConfig.databaseId,
-  //       appwriteConfig.userCollectionId,
-  //       userDocument.$id
-  //     );
-
-  //     return [deleteAccount, deleteUserDB];
-  //   } catch (error) {
-  //     console.error("Delete user error:", error);
-  //     throw error;
-  //   }
-  // };
 
   const updateUserRoleId = async (userId, newRoleId) => {
     try {
@@ -208,20 +176,143 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const allSpecialDietPostCollection = async () => {
+  // ================================ Post Logic =======================================
+  const allPostCollection = async () => {
     try {
       let response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.postCollectionId,
-        [Query.equal("category", "Special Diet").limit(10)]
+        [Query.limit(25)]
       );
-
+      console.log(response);
       return response.documents || [];
     } catch (error) {
-      console.error("Error fetching user collection:", error);
+      console.error("Error fetching post collection:", error);
       throw error;
     }
   };
+
+  const addPostCollection = async (post) => {
+    try {
+      const uploadedFile = await uploadFile(post.file);
+      if (!uploadedFile) throw Error;
+
+      const fileUrl = await getFilePreview(uploadedFile.$id);
+      if (!fileUrl) {
+        await deleteFile(uploadedFile.$id);
+        throw Error;
+      }
+
+      const newPost = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId,
+        ID.unique(),
+        {
+          creator: post.creator,
+          title: post.title,
+          imageUrl: fileUrl,
+          imageId: uploadedFile.$id,
+          content: post.content,
+          uploadTime: post.uploadTime,
+          category: post.category,
+        }
+      );
+
+      if (!newPost) {
+        await deleteFile(uploadedFile.$id);
+        throw Error;
+      }
+      // return newPost;
+    } catch (error) {
+      console.error("Error fetching post collection:", error.message);
+      throw error;
+    }
+  };
+
+  const uploadFile = async (file) => {
+    try {
+      const uploadedFile = await storage.createFile(
+        appwriteConfig.storageId,
+        ID.unique(),
+        file
+      );
+
+      return uploadedFile;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getFilePreview = async (fileId) => {
+    try {
+      const fileUrl = storage.getFilePreview(
+        appwriteConfig.storageId,
+        fileId,
+        2000,
+        2000,
+        "top",
+        100
+      );
+
+      console.log(fileUrl);
+
+      if (!fileUrl) {
+        throw new Error("File preview URL is undefined or empty.");
+      }
+
+      return fileUrl;
+    } catch (error) {
+      console.error("Error getting file preview:", error.message);
+      throw error;
+    }
+  };
+
+  const deleteFile = async (fileId) => {
+    try {
+      await storage.deleteFile(appwriteConfig.storageId, fileId);
+
+      return { status: "ok" };
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      return { status: "error", message: error.message };
+    }
+  };
+
+  const deletePostCollection = async (postId, imageId) => {
+    if (!postId || !imageId) return;
+
+    try {
+      const statusCode = await databases.deleteDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId,
+        postId
+      );
+
+      if (!statusCode) throw Error;
+
+      await deleteFile(imageId);
+
+      return { status: "Ok" };
+    } catch (error) {
+      console.error("Error deleting post collection:", error);
+      return { status: "error", message: error.message };
+    }
+  };
+
+  // const allSpecialDietPostCollection = async () => {
+  //   try {
+  //     let response = await databases.listDocuments(
+  //       appwriteConfig.databaseId,
+  //       appwriteConfig.postCollectionId,
+  //       [Query.equal("category", "Special Diet").limit(10)]
+  //     );
+
+  //     return response.documents || [];
+  //   } catch (error) {
+  //     console.error("Error fetching user collection:", error);
+  //     throw error;
+  //   }
+  // };
 
   const contextData = {
     user,
@@ -229,9 +320,13 @@ export const AuthProvider = ({ children }) => {
     logoutUser,
     registerUser,
     allUserCollection,
-    // deleteUserCollection,
     updateUserRoleId,
-    allSpecialDietPostCollection,
+    allPostCollection,
+    addPostCollection,
+    uploadFile,
+    getFilePreview,
+    deleteFile,
+    deletePostCollection,
   };
 
   return (

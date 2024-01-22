@@ -138,7 +138,9 @@ function ProfileMenu() {
         ) : (
           <>
             <a href="/sign-up">
-              <Button variant="outlined">Sign Up</Button>
+              <Button variant="outlined" className="mr-1">
+                Sign Up
+              </Button>
             </a>
             <a href="/sign-in">
               <Button>Sign In</Button>

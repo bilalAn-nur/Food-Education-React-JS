@@ -6,24 +6,12 @@ import {
   CardHeader,
   Button,
   IconButton,
-  Tooltip,
   CardFooter,
 } from "@material-tailwind/react";
 
 const RecipeCard = ({ recipe }) => {
-  const maxWords = 20;
-  const truncateText = (text, maxWords) => {
-    const words = text.split(" ");
-
-    if (words.length > maxWords) {
-      return words.slice(0, maxWords).join(" ") + "...";
-    } else {
-      return text;
-    }
-  };
-  const truncatedSummary = truncateText(recipe.summary, maxWords);
   return (
-    <Card className="w-full max-w-[26rem] shadow-lg">
+    <Card className="w-full max-w-[26rem] max-h-96 h-96 shadow-lg">
       <CardHeader floated={false} color="blue-gray">
         <img src={recipe.image} alt={recipe.title} />
         <div className="to-bg-black-10 absolute inset-0 h-full w-full bg-gradient-to-tr from-transparent via-transparent to-black/60 " />
@@ -44,15 +32,12 @@ const RecipeCard = ({ recipe }) => {
       </CardHeader>
       <CardBody>
         <div className="mb-3 flex items-center justify-between">
-          <Typography variant="h5" color="blue-gray" className="font-medium">
+          <Typography variant="h5" color="blue-gray" className="font-medium ">
             {recipe.title}
           </Typography>
         </div>
-        <Typography color="gray">
-          <div dangerouslySetInnerHTML={{ __html: truncatedSummary }} />
-        </Typography>
       </CardBody>
-      <CardFooter className="pt-3">
+      <CardFooter className="pt-3 inset-x-0 bottom-0 h-20 absolute">
         <Button size="lg" fullWidth={true}>
           Click to detail
         </Button>
@@ -60,13 +45,11 @@ const RecipeCard = ({ recipe }) => {
     </Card>
   );
 };
+
 RecipeCard.propTypes = {
   recipe: PropTypes.shape({
     image: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
-    summary: PropTypes.string.isRequired,
-    servings: PropTypes.string.isRequired,
-    readyInMinutes: PropTypes.string.isRequired,
   }).isRequired,
 };
 

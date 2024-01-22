@@ -53,6 +53,8 @@ export function UserManagement() {
         } catch (error) {
           alert(error);
         }
+      } else {
+        console.log("batal");
       }
     } catch (error) {
       alert(error);
@@ -175,7 +177,7 @@ export function UserManagement() {
       </Card>
       {alert && (
         <div className="relative w-full">
-          <div className="absolute bottom-0 right-0 bottom-0">
+          <div className="absolute right-0 bottom-0">
             <Alert
               open={true}
               onClose={() => setAlert(null)}

@@ -161,8 +161,6 @@ export const AuthProvider = ({ children }) => {
 
       userDocument.roleId = newRoleId;
 
-      console.log(userDocument.roleId);
-
       const promise = databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.userCollectionId,
@@ -172,19 +170,25 @@ export const AuthProvider = ({ children }) => {
 
       return promise;
     } catch (error) {
-      alert(error);
+      console.log(error);
     }
   };
 
   // ================================ Post Logic =======================================
-  const allPostCollection = async () => {
+  const allPostCollection = async (searchTerm = "") => {
     try {
+      const filters = searchTerm
+        ? [
+            `title=${encodeURIComponent(searchTerm)}`,
+            `category=${encodeURIComponent(searchTerm)}`,
+          ]
+        : [];
       let response = await databases.listDocuments(
         appwriteConfig.databaseId,
         appwriteConfig.postCollectionId,
-        [Query.limit(25)]
+        [Query.limit(25)],
+        filters
       );
-      console.log(response);
       return response.documents || [];
     } catch (error) {
       console.error("Error fetching post collection:", error);
@@ -222,10 +226,97 @@ export const AuthProvider = ({ children }) => {
         await deleteFile(uploadedFile.$id);
         throw Error;
       }
-      // return newPost;
+      return newPost;
     } catch (error) {
       console.error("Error fetching post collection:", error.message);
       throw error;
+    }
+  };
+
+  const editPostCollection = async (postId, post) => {
+    try {
+      const postSearch = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId
+      );
+
+      const userDocument = postSearch.documents.find(
+        (doc) => doc.$id === postId
+      );
+      if (!userDocument) {
+        throw new Error("User not found");
+      }
+      let imageUrl = post.imageUrl;
+
+      if (imageUrl !== userDocument.imageUrl) {
+        await deleteFile(userDocument.imageId);
+
+        const uploadedFile = await uploadFile(post.file);
+        if (!uploadedFile) throw Error;
+
+        const fileUrl = await getFilePreview(uploadedFile.$id);
+        if (!fileUrl) {
+          await deleteFile(uploadedFile.$id);
+          throw Error;
+        }
+        const UpdateImage = await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.postCollectionId,
+          postId,
+          {
+            imageUrl: fileUrl,
+            imageId: uploadedFile.$id,
+          }
+        );
+        if (!UpdateImage) throw Error;
+      } else {
+        const fileUrl = post.imageUrl;
+        const imageId = post.imageId;
+        const UpdateImage = await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.postCollectionId,
+          postId,
+          {
+            imageUrl: fileUrl,
+            imageId: imageId,
+          }
+        );
+        if (!UpdateImage) throw Error;
+      }
+      const promise = await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId,
+        userDocument.$id,
+        {
+          title: post.title,
+          content: post.content,
+          category: post.category,
+        }
+      );
+      if (!promise) throw Error;
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const deletePostCollection = async (postId, imageId) => {
+    if (!postId || !imageId) return;
+
+    try {
+      const statusCode = await databases.deleteDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.postCollectionId,
+        postId
+      );
+
+      if (!statusCode) throw Error;
+
+      await deleteFile(imageId);
+
+      return { status: "Ok" };
+    } catch (error) {
+      console.error("Error deleting post collection:", error);
+      return { status: "error", message: error.message };
     }
   };
 
@@ -278,42 +369,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const deletePostCollection = async (postId, imageId) => {
-    if (!postId || !imageId) return;
-
-    try {
-      const statusCode = await databases.deleteDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.postCollectionId,
-        postId
-      );
-
-      if (!statusCode) throw Error;
-
-      await deleteFile(imageId);
-
-      return { status: "Ok" };
-    } catch (error) {
-      console.error("Error deleting post collection:", error);
-      return { status: "error", message: error.message };
-    }
-  };
-
-  // const allSpecialDietPostCollection = async () => {
-  //   try {
-  //     let response = await databases.listDocuments(
-  //       appwriteConfig.databaseId,
-  //       appwriteConfig.postCollectionId,
-  //       [Query.equal("category", "Special Diet").limit(10)]
-  //     );
-
-  //     return response.documents || [];
-  //   } catch (error) {
-  //     console.error("Error fetching user collection:", error);
-  //     throw error;
-  //   }
-  // };
-
   const contextData = {
     user,
     loginUser,
@@ -327,6 +382,7 @@ export const AuthProvider = ({ children }) => {
     getFilePreview,
     deleteFile,
     deletePostCollection,
+    editPostCollection,
   };
 
   return (

@@ -38,7 +38,7 @@ function ProfileMenu() {
             direct: "/dashboard/home",
           },
           {
-            label: "My Profile",
+            label: "Artikelku",
             icon: UserCircleIcon,
             direct: "#",
           },
@@ -58,6 +58,18 @@ function ProfileMenu() {
             label: "My Saves",
             icon: InboxArrowDownIcon,
             direct: "#",
+          },
+          {
+            label: "Sign Out",
+            icon: PowerIcon,
+          },
+        ]
+      : user && user.roleId === 0
+      ? [
+          {
+            label: "Dashboard",
+            icon: HomeIcon,
+            direct: "/dashboard/home",
           },
           {
             label: "Sign Out",

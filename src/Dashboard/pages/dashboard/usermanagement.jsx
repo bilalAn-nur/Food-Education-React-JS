@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 export function UserManagement() {
   const { allUserCollection, updateUserRoleId } = useAuth();
   const [users, setUsers] = useState([]);
+  const [userRoles, setUserRoles] = useState({});
+  const [initialRoleId, setInitialRoleId] = useState(null);
 
   const [alert, setAlert] = useState("");
 
@@ -24,6 +26,14 @@ export function UserManagement() {
       try {
         const response = await allUserCollection();
         setUsers(response);
+
+        const roles = {};
+        response.forEach(({ $id, roleId }) => {
+          roles[$id] = roleId;
+        });
+
+        // Perbarui state userRoles
+        setUserRoles(roles);
       } catch (error) {
         console.error("Error fetching user collection:", error);
       }
@@ -31,7 +41,6 @@ export function UserManagement() {
 
     fetchData();
   }, [allUserCollection]);
-
   // const handleDeleteUser = async (userId) => {
   //   try {
   //     const response = await deleteUserCollection(userId);
@@ -41,34 +50,52 @@ export function UserManagement() {
   //   }
   // };
 
-  const handleChangeRoleId = async (userId, newRoleId) => {
-    try {
-      const isConfirmed = window.confirm(
-        "Are you sure you want to change the user role?"
-      );
-      if (isConfirmed) {
-        try {
-          const response = await updateUserRoleId(userId, newRoleId);
-          return response;
-        } catch (error) {
-          alert(error);
-        }
-      } else {
-        console.log("batal");
-      }
-    } catch (error) {
-      alert(error);
-    }
-  };
-
-  const handleRoleChange = (event, userId) => {
+  const handleRoleChange = async (event, userId) => {
     try {
       const newRoleId = Number(event.target.value);
-      handleChangeRoleId(userId, newRoleId);
-      setAlert({
-        type: "success",
-        message: "Role Berhasil dirubah.",
-      });
+      if (initialRoleId === null) {
+        setInitialRoleId(newRoleId);
+      }
+
+      try {
+        const isConfirmed = window.confirm(
+          "Are you sure you want to change the user role?"
+        );
+
+        if (isConfirmed) {
+          try {
+            const response = await updateUserRoleId(userId, newRoleId);
+            if (!response) {
+              throw new Error("Failed to update user role");
+            }
+
+            setInitialRoleId(newRoleId);
+
+            // Perbarui state userRoles
+            setUserRoles((prevRoles) => ({
+              ...prevRoles,
+              [userId]: newRoleId,
+            }));
+
+            setAlert({
+              type: "success",
+              message: "Role Berhasil dirubah.",
+            });
+          } catch (error) {
+            alert(error);
+          }
+        } else {
+          // Gunakan fungsi yang sesuai untuk mengatur nilai role
+          // Perbarui state userRoles saat membatalkan
+          setUserRoles((prevRoles) => ({
+            ...prevRoles,
+            [userId]: initialRoleId,
+          }));
+          console.log("batal");
+        }
+      } catch (error) {
+        alert(error);
+      }
     } catch (error) {
       alert(error);
     }
@@ -100,8 +127,9 @@ export function UserManagement() {
               </tr>
             </thead>
             <tbody>
-              {users.map(
-                ({ $id, imageUrl, name, email, roleId, joined }, key) => {
+              {users
+                .filter(({ roleId }) => roleId !== 0)
+                .map(({ $id, imageUrl, name, email, roleId, joined }, key) => {
                   const className = `py-3 px-5 ${
                     key === users.length - 1
                       ? ""
@@ -139,7 +167,7 @@ export function UserManagement() {
                           <div className="flex gap-10">
                             <Radio
                               name={$id}
-                              label="Admin"
+                              label="Editor"
                               value={1}
                               defaultChecked={roleId === 1}
                               onChange={(event) => handleRoleChange(event, $id)}
@@ -160,17 +188,16 @@ export function UserManagement() {
                         </Typography>
                       </td>
                       {/* <td className={className}>
-                        <Button
-                          as="a"
-                          onClick={() => handleDeleteUser($id)}
-                          className="text-xs font-semibold text-blue-gray-600">
-                          Hapus
-                        </Button>
-                      </td> */}
+                          <Button
+                            as="a"
+                            onClick={() => handleDeleteUser($id)}
+                            className="text-xs font-semibold text-blue-gray-600">
+                            Hapus
+                          </Button>
+                        </td> */}
                     </tr>
                   );
-                }
-              )}
+                })}
             </tbody>
           </table>
         </CardBody>
